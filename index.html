@@ -4,6 +4,10 @@
     <title>py2rest</title>
     <link rel="stylesheet" type="text/css" href="reset.css">
     <link rel="stylesheet" type="text/css" href="main.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/default.min.css">
+    <meta charset="utf-8">
 </head>
 <body>
 <div class="main-container">
@@ -19,24 +23,103 @@
                 <span class="tab-header__text">Instrukcja</span>
             </div>
             <div data-js-tab-index="3" class="tab-headers__header">
-                <span class="tab-header__text">Bibliografia</span>
+                <span class="tab-header__text">Repozytorium</span>
             </div>
             <div class="tab-headers__slider">
             </div>
         </div>
         <div class="tab-container__tab-content js-tab-content">
             <div data-js-tab-index="1" class="tab-content__content tab-content__content--active">
-                O bibliotece content
+                <p>
+                    Py2rest to biblioteka dla języka Python wspomagająca tworzenie aplikacji internetowych przez generację
+                    kodu odpowiadającego za warstwę komunikacji dla klientów serwera WWW. Generacja odbywa się na podstawie
+                    opisu API aplikacji podanego w kodzie części backendowej aplikacji.
+                </p>
+                <br>
+                <p>Funkcjonalność biblioteki obejmuje m.in.</p>
+                <ul class="py2rest-ul">
+                    <li>Obsługę komunikacji z wykorzystaniem HTTP metodami application/json oraz multipart/form-data</li>
+                    <li>Wsparcie dla dużej ilości typów danych, również tych niewspieranych wprost przez format JSON, takich jak daty czy liczby typu decimal</li>
+                    <li>Generację kodu dla 3 typów klientów: w JavaScript'cie za pomocą Fetch API oraz z wykorzystaniem frameworka Angular oraz w Pythonie przy użyciu biblioteki requests</li>
+                    <li>Ułatwienie korzystania z narzędzi typu Swagger poprzez przetwarzanie opisu API zawartego w kodzie na dokument zgodny ze specyfikacją OpenAPI</li>
+                </ul>
+                <p>
+                    Biblioteka py2rest pozwala na trzymanie definicji API w jednym miejscu - tym samym, w którym jego parametry są wykorzystywane.
+                    Dzięki temu w razie potrzeby zmiany interfejsu nie ma potrzeby modyfikować kodu potencjalnie wielu klientów manualnie -
+                    wystarczy uaktualnić definicje po stronie serwera i przegenerować kod klientów.
+                </p>
+                <br>
+                <p>
+                    Zwiększa ona również produktywność programistów dzięki zaoszczędzeniu czasu poświęcanego na ręczne
+                    dokumentowanie API serwera w określonym formacie i pisanie do niego klientów.
+                </p>
             </div>
             <div data-js-tab-index="2" class="tab-content__content">
-                Instrukcja content
+                <p>
+                    Podstawową czynnością w bibliotece py2rest jest definiowanie struktur danych przesyłanych w ciele żądania lub w odpowiedzi od serwera.
+                    W celu utworzenia nowego typu struktury należy stworzyć klasę dziedziczącą po klasie bazowej JSONObject bądź FormData.
+                </p>
+
+                <pre>
+                    <code class="python">
+from py2rest.api.fields import JSONObject, IntegerField, DateField, ListField
+
+class SimpleJson(JSONObject):
+    myInt = IntegerField()
+
+class ComplexJson(JSONObject):
+    simpleJsons = ListField(SimpleJson())
+    myDate = DateField()
+                    </code>
+                </pre>
+
+                <p>
+                    Następnie należy zdefiniować konkretne endpointy wystawiane przez aplikację poprzez dekorację odpowiednich kontrolerów w kodzie.
+                </p>
+
+                <pre>
+                    <code class="python">
+@api_endpoint(url='/my/url/{example_url_param}',
+                        url_params=[Parameter('example_url_param', int)],
+                        method=http_method.PUT,
+                        headers=[Parameter('Authorization', str)],
+                        group_name='exampleGeneratedFileName',
+                        name='exampleGeneratedFuncName',
+                        body=SimpleJson(),
+                        return_type=ComplexJson())
+def my_controller(request):
+    pass
+                    </code>
+                </pre>
+
+                <p>
+                    Po zdefiniowaniu endpointów aplikacji wystarczy skonfigurować i uruchomić generację.
+                </p>
+
+                <pre>
+                    <code class="python">
+angular_path = '~/angular/generation/path'
+py2re = Py2Rest('http://some-url.com',
+                        [AngularEngine(generation_path=angular_path)])
+py2re.read_decorated_endpoints()
+py2re.generate()
+                    </code>
+                </pre>
+
+                <p style="color: red">
+                    -- TODO --
+                </p>
             </div>
             <div data-js-tab-index="3" class="tab-content__content">
-                Bibliografia content
+                <p style="color: red">
+                    -- TODO --
+                </p>
             </div>
         </div>
     </div>
 </div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
 <script src="main.js"></script>
 </body>
 </html>
