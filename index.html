@@ -23,7 +23,7 @@
                 <span class="tab-header__text">Instrukcja</span>
             </div>
             <div data-js-tab-index="3" class="tab-headers__header">
-                <span class="tab-header__text">Repozytorium</span>
+                <span class="tab-header__text">Kod biblioteki</span>
             </div>
             <div class="tab-headers__slider">
             </div>
@@ -55,13 +55,14 @@
                 </p>
             </div>
             <div data-js-tab-index="2" class="tab-content__content">
-                <p>
-                    Podstawową czynnością w bibliotece py2rest jest definiowanie struktur danych przesyłanych w ciele żądania lub w odpowiedzi od serwera.
-                    W celu utworzenia nowego typu struktury należy stworzyć klasę dziedziczącą po klasie bazowej JSONObject bądź FormData.
-                </p>
+                <section>
+                    <p>
+                        Podstawową czynnością w bibliotece py2rest jest definiowanie struktur danych przesyłanych w ciele żądania lub w odpowiedzi od serwera.
+                        W celu utworzenia nowego typu struktury należy stworzyć klasę dziedziczącą po klasie bazowej JSONObject bądź FormData.
+                    </p>
 
-                <pre>
-                    <code class="python">
+                    <pre>
+                        <code class="python">
 from py2rest.api.fields import JSONObject, IntegerField, DateField, ListField
 
 class SimpleJson(JSONObject):
@@ -70,15 +71,15 @@ class SimpleJson(JSONObject):
 class ComplexJson(JSONObject):
     simpleJsons = ListField(SimpleJson())
     myDate = DateField()
-                    </code>
-                </pre>
+                        </code>
+                    </pre>
 
-                <p>
-                    Następnie należy zdefiniować konkretne endpointy wystawiane przez aplikację poprzez dekorację odpowiednich kontrolerów w kodzie.
-                </p>
+                    <p>
+                        Następnie należy zdefiniować konkretne endpointy wystawiane przez aplikację poprzez dekorację odpowiednich kontrolerów w kodzie.
+                    </p>
 
-                <pre>
-                    <code class="python">
+                    <pre>
+                        <code class="python">
 @api_endpoint(url='/my/url/{example_url_param}',
                         url_params=[Parameter('example_url_param', int)],
                         method=http_method.PUT,
@@ -89,30 +90,107 @@ class ComplexJson(JSONObject):
                         return_type=ComplexJson())
 def my_controller(request):
     pass
-                    </code>
-                </pre>
+                        </code>
+                    </pre>
 
-                <p>
-                    Po zdefiniowaniu endpointów aplikacji wystarczy skonfigurować i uruchomić generację.
-                </p>
-
-                <pre>
-                    <code class="python">
+                    <p>
+                        Po zdefiniowaniu endpointów aplikacji wystarczy skonfigurować i uruchomić generację.
+                    </p>
+                    <pre>
+                        <code class="python">
 angular_path = '~/angular/generation/path'
 py2re = Py2Rest('http://some-url.com',
                         [AngularEngine(generation_path=angular_path)])
 py2re.read_decorated_endpoints()
 py2re.generate()
-                    </code>
-                </pre>
+                        </code>
+                    </pre>
+                </section>
+                <section class="instr-section">
+                    <h3 class="section-title">Przykład użycia</h3>
+                    <p>Poniżej przedstawiono przykładową konfigurację aplikacji dla aplikacji służącej do pisania
+                    artykułów i komentowania ich, wykorzystującej Django jako backend i Angular jako frontend.
+                    Pełen kod projektu można znaleźć w repozytorium <a href="https://github.com/py2rest/py2rest-example">py2rest-example</a></p>
 
-                <p style="color: red">
-                    -- TODO --
-                </p>
+                    <section class="articleapp-code">
+                        <h4>Definicje struktur danych w aplikacji</h4>
+                        <pre>
+                            <code class="python">
+class CommentJSON(JSONObject):
+    id = IntegerField()
+    author = CharField(required=True)
+    content = CharField(required=True)
+    likesCount = IntegerField()
+    createdDate = DateTimeField()
+
+
+class ArticleJSON(JSONObject):
+    id = IntegerField()
+    title = CharField(required=True)
+    author = CharField(required=True)
+    content = CharField(required=True)
+    createdDate = DateTimeField()
+    likesCount = IntegerField()
+    comments = ListField(CommentJSON())
+    tags = ListField(CharField())
+
+
+class ArticlesListJSON(JSONObject):
+    articles = ListField(ArticleJSON(), required=True)
+    pagesCount = IntegerField()
+                            </code>
+                        </pre>
+                        <h4>Endpointy API (implementacja zastąpiona instrukcją pass)</h4>
+                        <pre>
+                            <code>
+@api_endpoint(method=http_method.GET, name='getArticles', return_type=ArticlesListJSON(), query_params=[Parameter('page', int)])
+def get_articles(request):
+    pass
+
+@api_endpoint(method=http_method.GET, name='getArticle', return_type=ArticleJSON())
+def get_article(request, id):
+    pass
+
+@api_endpoint(method=http_method.POST, name='createArticle', body=ArticleJSON(), return_type=ArticleJSON())
+def create_article(request):
+    pass
+
+@api_endpoint(method=http_method.PUT, name='likeArticle')
+def like_article(request, id):
+    pass
+
+@api_endpoint(method=http_method.PUT, name='likeComment')
+def like_comment(request, id):
+    pass
+
+@api_endpoint(method=http_method.POST, name='createComment', body=CommentJSON(), return_type=CommentJSON())
+def create_comment(request, article_id):
+    pass
+
+@api_endpoint(method=http_method.GET, name='getArticlesByTag', return_type=ArticlesListJSON())
+def get_articles_by_tag(request, tag_name):
+    pass
+                            </code>
+                        </pre>
+                        <h4>Konfiguracja generacji jako komenda Django</h4>
+                        <pre>
+                            <code>
+class Command(BaseCommand):
+
+    def handle(self, *args, **options):
+        angular_path = os.path.join(os.path.dirname(settings.BASE_DIR), 'frontend', 'src', 'app', 'gen')
+        py2re = Py2Rest('http://127.0.0.1:8000', [AngularEngine(generation_path=angular_path)],
+                        DjangoArgResolver())
+        py2re.read_decorated_endpoints()
+        py2re.generate()
+                            </code>
+                        </pre>
+                    </section>
+                </section>
             </div>
             <div data-js-tab-index="3" class="tab-content__content">
-                <p style="color: red">
-                    -- TODO --
+                <p>
+                    Kod biblioteki można pobrać pod podanym <a href="py2rest-code.zip">linkiem</a> .
                 </p>
             </div>
         </div>
